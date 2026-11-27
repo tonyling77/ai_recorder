@@ -101,8 +101,10 @@ jobs:
         shell: bash
         continue-on-error: true
         run: |
-          bundle=$(find build -maxdepth 2 -name "*-system-update.irisfw" | head -1)
+          ls -l build
+          bundle=$(ls build/*.irisfw 2>/dev/null | head -1)
           if [ -n "$bundle" ]; then
+            echo "the bundle is $bundle"
             python3 tools/check_release.py --bundle "$bundle"
           else
             echo "no bundle was built"
@@ -112,14 +114,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p release
-          echo "### the build directory" >> "$GITHUB_STEP_SUMMARY"
-          ls -l build >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
-          cp build/ai_recorder.bin release/ 2>/dev/null || true
-          cp build/partition_table/partition-table.bin release/ 2>/dev/null || true
-          find build -maxdepth 2 -name "*.irisfw" -exec cp {} release/ \; 2>/dev/null || true
-          echo "### the release directory" >> "$GITHUB_STEP_SUMMARY"
-          ls -l release >> "$GITHUB_STEP_SUMMARY"
+          cp build/ai_recorder.bin release/
+          cp build/partition_table/partition-table.bin release/
+          bundle=$(ls build/*.irisfw 2>/dev/null | head -1)
+          if [ -z "$bundle" ]; then
+            echo "::error::the build directory holds no System Update bundle"
+            ls -l build
+            exit 1
+          fi
+          cp "$bundle" release/
           (cd release && ls | grep -v '^SHA256SUMS$' | xargs sha256sum > SHA256SUMS)
+          ls -l release
           cat release/SHA256SUMS
 
       - name: Publish the release
