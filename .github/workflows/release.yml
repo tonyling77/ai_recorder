@@ -58,6 +58,16 @@ jobs:
           python3 submodule/esp-mosaico-utils/mosaico-tools/skills/idf-low-noise-build/scripts/idf_low_noise_build.py \
             --project . build
 
+      # The System Update bundle carries the interface of the application,
+      # and the interface is built by the GSP compiler. The compiler is
+      # pinned and prepared apart from the build, the way the product CI
+      # prepares it.
+      - name: Prepare the pinned GSP compiler
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check esp-gsp-tools==0.1.1
+          python submodule/esp-mosaico-utils/tools/ci/prepare_gsp.py --compiler-only
+
       # The System Update bundle is built by the ESP-Iris tools, which need
       # their own host environment. Prepare it the way the product does, so
       # the bundle is the same one the board was verified with.
