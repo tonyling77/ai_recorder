@@ -52,10 +52,10 @@ jobs:
           echo "IDF_PATH=$IDF_PATH" >> "$GITHUB_ENV"
           echo "IDF_TOOLS_PATH=$IDF_TOOLS_PATH" >> "$GITHUB_ENV"
 
-      # One of the host tests compiles the QR code generator, which is a
-      # component of the Registry. The managed components have to be there
-      # before the tests run, and resolving them is a configure, not a
-      # build. The versions are the ones the manifest pins.
+      # The host tests write into a temporary directory and the interface
+      # suite compiles a component of the Registry, so the managed components
+      # have to be there before the tests run. Resolving them is a
+      # configure, not a build. The versions are the ones the manifest pins.
       - name: Resolve the managed components
         shell: bash
         run: |
@@ -78,14 +78,21 @@ jobs:
         working-directory: components/app_recorder/host_tests
         run: python -m unittest discover -v
 
-      - name: Build and run the interface host tests
-        working-directory: components/app_hello/host_tests
-        run: make test
-
-      - name: Build and run the onboarding host tests
-        working-directory: components/app_onboard/host_tests
-        run: make test
-
-      - name: Build and run the recorder host tests
-        working-directory: components/app_recorder/host_tests
-        run: make test
+      # Each suite is reported on its own, so a failure names the suite that
+      # failed instead of only the exit code of the last command.
+      - name: Build and run the host tests
+        shell: bash
+        run: |
+          failed=0
+          for dir in components/app_hello/host_tests \
+                     components/app_onboard/host_tests \
+                     components/app_recorder/host_tests; do
+            echo "### $dir" >> "$GITHUB_STEP_SUMMARY"
+            if make -C "$dir" test >> "$GITHUB_STEP_SUMMARY" 2>&1; then
+              echo "**$dir passed**" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "**$dir FAILED**" >> "$GITHUB_STEP_SUMMARY"
+              failed=1
+            fi
+          done
+          exit $failed

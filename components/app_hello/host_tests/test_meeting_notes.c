@@ -178,19 +178,21 @@ static void the_minutes_survive_a_save_and_a_load(void)
     meeting_notes_t notes;
     meeting_notes_t loaded;
     char path[] = "/tmp/ai-recorder-notes-XXXXXX";
+    char file[256];
     const char *todos[] = {"整理录音", "确认左滑", "约下次会议"};
     expect(mkdtemp(path) != NULL, "temp directory");
+    expect(snprintf(file, sizeof(file), "%s/notes.txt", path) > 0, "the file name");
     expect(meeting_notes_merge_card(&notes, "9001", "2026-11-11 15:20", "产品评审会", "纪要放到设备上",
                                     todos, 3) == 0,
            "the note is stored");
-    expect(meeting_notes_save(&notes, "/tmp/ai-recorder-notes-file.txt") == 0, "the minutes are saved");
-    expect(meeting_notes_load(&loaded, "/tmp/ai-recorder-notes-file.txt") == 0, "the minutes are loaded");
+    expect(meeting_notes_save(&notes, file) == 0, "the minutes are saved");
+    expect(meeting_notes_load(&loaded, file) == 0, "the minutes are loaded");
     expect(meeting_notes_count(&loaded) == 1, "the loaded minutes have the note");
     expect(meeting_notes_fingerprint(&loaded) == meeting_notes_fingerprint(&notes),
            "the loaded minutes are the same minutes");
     expect(meeting_notes_load(&loaded, "/tmp/ai-recorder-notes-missing.txt") != 0,
            "a missing file is refused");
-    remove("/tmp/ai-recorder-notes-file.txt");
+    remove(file);
     rmdir(path);
 }
 
