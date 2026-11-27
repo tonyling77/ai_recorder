@@ -1,0 +1,23 @@
+dependencies:
+  idf: ">=6.2"
+  esp-mosaico-bsp:
+    version: "0.2.0"
+    override_path: "../submodule/esp-mosaico-bsp/components/esp-mosaico-bsp"
+  esp_iris:
+    version: "0.2.0"
+    override_path: "../submodule/esp-mosaico-utils/ESP-Iris/components/esp_iris"
+  espressif/esp-gsp: "==1.5.1"
+  # The BSP display adapter uses headers deprecated by LVGL 9.6.
+  lvgl/lvgl: "==9.5.0"
+
+  # The versions this application is built and tested against. They are
+  # transitive dependencies, so nothing else pins them: without these the
+  # component manager resolves them to whatever is newest, and the firmware
+  # is then not the one that was verified. Every one of them satisfies the
+  # range the component that asks for it declares.
+  espressif/esp_display_present: "1.2.2"
+  espressif/freetype: "2.14.3~1"
+  espressif/libpng: "1.6.59"
+  espressif/rmaker_console: "1.1.0"
+  espressif/spi_nand_flash: "1.4.4"
+  espressif/zlib: "1.3.2~2"

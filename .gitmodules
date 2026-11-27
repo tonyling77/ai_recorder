@@ -1,0 +1,9 @@
+[submodule "submodule/esp-mosaico-utils"]
+	path = submodule/esp-mosaico-utils
+	url = https://github.com/esp-mosaico/esp-mosaico-utils.git
+[submodule "submodule/esp-mosaico-bsp"]
+	path = submodule/esp-mosaico-bsp
+	url = https://github.com/tonyling77/esp-mosaico-bsp.git
+[submodule "submodule/esp-rainmaker-neo-firmware"]
+	path = submodule/esp-rainmaker-neo-firmware
+	url = https://github.com/espressif/esp-rainmaker-neo-firmware.git

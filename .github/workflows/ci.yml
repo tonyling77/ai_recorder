@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-tests:
+    name: host tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.10"
+
+      - name: Run the inbox tests
+        working-directory: tools/inbox
+        run: python -m unittest discover -v
+
+      - name: Run the interface policy tests
+        working-directory: components/app_hello/host_tests
+        run: python -m unittest discover -v
+
+      - name: Run the onboarding policy tests
+        working-directory: components/app_onboard/host_tests
+        run: python -m unittest discover -v
+
+      - name: Run the recorder policy tests
+        working-directory: components/app_recorder/host_tests
+        run: python -m unittest discover -v
+
+      - name: Build and run the interface host tests
+        working-directory: components/app_hello/host_tests
+        run: make test
+
+      - name: Build and run the onboarding host tests
+        working-directory: components/app_onboard/host_tests
+        run: make test
+
+      - name: Build and run the recorder host tests
+        working-directory: components/app_recorder/host_tests
+        run: make test

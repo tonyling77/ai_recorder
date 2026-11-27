@@ -1,0 +1,176 @@
+# ============================================================================
+# 收件箱的配置
+#
+# 怎么用:
+#   1. 把这个文件复制成 config.yaml,放在 inbox.py 旁边
+#   2. 把尖括号 <> 里的内容换掉(尖括号本身要删掉)
+#   3. 启动:python3 inbox.py --root inbox-data --port 8765
+#
+# 尖括号里的是占位,不是能用的值。留着的收件箱会报错,不会悄悄用错。
+#
+# 配置分三段:
+#   model   收件箱自己调的大模型接口(转写和直接写纪要都用它)
+#   route   谁写纪要、用哪个模型
+#   agents  收件箱不认识的智能体,在这里声明
+# ============================================================================
+
+
+model:
+  # --------------------------------------------------------------------------
+  # 接口地址。OpenAI 兼容格式,以 /v1 结尾,不要带结尾的斜杠。
+  #
+  # ✅ 实测可用(2026-11-24,阿里云百炼):
+  #      https://dashscope.aliyuncs.com/compatible-mode/v1
+  #
+  # ⚠️ 不要用业务空间专属域名(ws-xxx.cn-beijing.maas.aliyuncs.com)。
+  #    它的 /compatible-mode/v1 会把 qwen3-asr-flash 路由到「专用 ASR 任务」,
+  #    于是报 400:
+  #      "The dedicated task `asr` ... does not support the current interface"
+  #    公共域名把它路由到 chat 兼容服务,同一个请求就正常了。
+  #
+  # 其它厂商的地址(格式一样,未实测):
+  #   MiniMax : https://api.minimax.cn/v1
+  #   智谱GLM : https://open.bigmodel.cn/api/paas/v4/
+  #   DeepSeek: https://api.deepseek.com
+  #   豆包方舟: https://ark.cn-beijing.volces.com/api/v3
+  #   月之暗面: https://api.moonshot.cn/v1
+  #   硅基流动: https://api.siliconflow.cn/v1
+  #
+  # 只要这个接口认 /chat/completions,收件箱就能用。
+  # --------------------------------------------------------------------------
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+
+  # --------------------------------------------------------------------------
+  # 写纪要用的模型名。
+  #
+  # ⚠️ 模型 id 大小写敏感。qwen4-max 能用,Qwen4-Max 报 404 model_not_found。
+  #
+  # 实测在这个账号下可用的(2026-11-24):
+  #   qwen4-max   qwen-max   qwen-plus   qwen-flash
+  #   qwen3.8-flash   qwen3.7-max   qwen3.5-flash
+  #   glm-5.3     deepseek-v4.1-flash   kimi-k3
+  #
+  # 带思考的模型(qwen4-max / qwen3.8-flash / glm-5.3 / kimi-k3 ...)会把思考
+  # 过程放在 reasoning_content 里,收件箱只取 content,不影响。
+  #
+  # 免费额度按模型独立给,在百炼控制台的额度条上看。qwen-turbo 现在是 429
+  # (RPS/RPM 限流,不是额度耗尽),先别用。
+  #
+  # 转写用的模型是下面 asr 那一个,两个可以不一样。
+  # --------------------------------------------------------------------------
+  default: qwen4-max
+
+  # --------------------------------------------------------------------------
+  # 密钥。只作为请求头的 Authorization 发出去,不会写进转写、纪要或报错里。
+  # --------------------------------------------------------------------------
+  api_key: <你的百炼 API Key>
+
+  # --------------------------------------------------------------------------
+  # 转写用的模型名。不写就按 base_url 猜:
+  #
+  #   base_url 含 minimax                        -> asr-1.0(MiniMax 自己的)
+  #   base_url 含 qianwen / dashscope / aliyuncs -> qwen3-asr-flash
+  #   其它地址                                    -> 必填,否则收件箱不知道用哪个转写
+  #
+  # ⚠️ 只有「千问3-ASR-Flash系列」支持 OpenAI 兼容方式(带 input_audio):
+  #      qwen3-asr-flash
+  #    qwen-audio-3.1-asr-flash 不支持,报 model_not_supported:
+  #      "Unsupported model ... for OpenAI compatibility mode"
+  #    它要走 DashScope 的 multimodal 端点,收件箱不会说那个。
+  #
+  # ⚠️ 单次上限 5 分钟 / 10 MB,而板子的一片录音最长 8 分钟,长会会被拒。
+  #    想要长会不挂,换成能吃 3 小时音频的模型(它不是专用转写模型,得配
+  #    asr_prompt 让它只吐字):
+  #
+  #      asr: qwen3.8-omni-flash
+  #      asr_prompt: "把这段录音逐字转写成文字,不要加任何说明或评论。"
+  # --------------------------------------------------------------------------
+  asr: qwen3-asr-flash
+
+  # --------------------------------------------------------------------------
+  # 转写时给模型的一句话。写转写的模型不问它就行,会说话的模型要问。
+  #
+  #   asr: qwen3-asr-flash        -> 不用写,专用模型自己知道要做什么
+  #   asr: qwen3.8-omni-flash     -> 写上,否则转写里会混进模型的说明
+  # --------------------------------------------------------------------------
+  # asr_prompt: "把这段录音逐字转写成文字,不要加任何说明或评论。"
+
+  # --------------------------------------------------------------------------
+  # 转写和写纪要也可以分家放在两家接口上。只在需要时才写。
+  #
+  #   asr_base_url: https://api.minimax.cn/v1
+  #   asr_api_key: <另一个密钥>
+  # --------------------------------------------------------------------------
+  # asr_base_url: <另一个接口地址>
+  # asr_api_key: <另一个密钥>
+
+
+# ============================================================================
+# 谁写纪要、用哪个模型
+#
+# route:
+#   agent: direct
+#   model: qwen
+#
+# agent 是谁写:
+#
+#   direct      收件箱自己调 model 段里的那个接口
+#   hermes      这台机器上的 Hermes
+#   workbuddy   这台机器上的 WorkBuddy
+#   opencode    这台机器上的 OpenCode
+#   muse        这台机器上的 Muse
+#
+# model 是哪个模型,十个短名:
+#
+#   minimax  mimo  deepseek  glm  qwen
+#   doubao   kimi  baidu     spark  hunyuan
+#
+# agent 直接问模型时,model 要和 base_url 是一家,否则收件箱启动就报错:
+#
+#   base_url 含 minimax                         -> model: minimax
+#   base_url 含 qianwen / dashscope / aliyuncs  -> model: qwen
+#   base_url 含 xiaomi / mimo                   -> model: mimo
+#   base_url 含 deepseek                        -> model: deepseek
+#   base_url 含 glm / z-ai / bigmodel           -> model: glm
+#   base_url 含 volces / doubao                 -> model: doubao
+#   base_url 含 moonshot / kimi                 -> model: kimi
+#   base_url 含 qianfan / baidubce              -> model: baidu
+#   base_url 含 xinghuo / spark                 -> model: spark
+#   base_url 含 hunyuan                         -> model: hunyuan
+#
+# 每个智能体自己知道这些短名背后是哪个模型,所以 provider 和 model_id
+# 通常不用写。智能体的 provider 不止一个的时候才要写:
+#
+#   route:
+#     agent: hermes
+#     model: qwen
+#     provider: openrouter
+#     model_id: qwen/qwen3.8-max-0902
+#
+# 临时换不用改文件:
+#   python3 inbox.py --agent hermes --model qwen
+# ============================================================================
+
+
+# ============================================================================
+# 收件箱不认识的智能体,在这里声明。
+#
+# command 是一行参数。两个占位:
+#
+#   {model}   换成模型 id
+#   {prompt}  换成要问的问题
+#
+# 写了 {prompt} 就把问题放进那一项;没写就走标准输入。
+#
+#   agents:
+#     my-agent:
+#       command: "my-agent --model {model} --ask {prompt}"    # 问题在参数里
+#     other-agent:
+#       command: "other-agent --model {model}"                # 问题走标准输入
+#
+# 收件箱把问题和"只返回一个 JSON 对象"的格式要求一起给智能体,
+# 智能体回 JSON,收件箱把它变成纪要。智能体自己的密钥在它自己的配置里。
+# ============================================================================
+# agents:
+#   my-agent:
+#     command: "<命令行> {model} {prompt}"

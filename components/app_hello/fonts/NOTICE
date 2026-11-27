@@ -1,0 +1,19 @@
+MosaicoNotesCN-GB.ttf is a GB2312 subset of Source Han Sans, converted from
+CFF to TrueType for the device screen and renamed.
+
+Copyright © 2014 Adobe Systems Incorporated. All Rights Reserved.
+Source Han Sans is copyright 2014-2025 Adobe (http://www.adobe.com/), with
+Reserved Font Name 'Source'. Source is a trademark of Adobe in the United
+States and/or other countries.
+
+This is a Modified Version of Source Han Sans. The modifications are:
+the glyphs were subset to the GB2312 charset, the outlines were converted
+from CFF to TrueType, and the font family was renamed so that the reserved
+font name is not used.
+
+It is licensed under the SIL Open Font License, Version 1.1. The complete
+license text is in OFL.txt next to this file.
+
+gb2312.txt next to this file is the GB2312 character set table. It is a list
+of code points from the Chinese national standard GB 2312-80 and carries no
+copyright of its own.

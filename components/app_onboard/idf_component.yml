@@ -1,0 +1,5 @@
+dependencies:
+  esp_rmaker_neo:
+    path: ../../submodule/esp-rainmaker-neo-firmware/components/esp_rmaker_neo
+  app_network:
+    path: ../../submodule/esp-rainmaker-neo-firmware/examples/common/app_network

@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ESP_IDF_REVISION: 7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware:
+    name: firmware build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Check out the pinned ESP-IDF
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: espressif/esp-idf
+          ref: ${{ env.ESP_IDF_REVISION }}
+          path: .idf/esp-idf
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install the ESP-IDF tools
+        shell: bash
+        run: |
+          export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
+          export IDF_TOOLS_PATH="$RUNNER_TEMP/espressif"
+          "$IDF_PATH/install.sh" all
+          echo "IDF_PATH=$IDF_PATH" >> "$GITHUB_ENV"
+          echo "IDF_TOOLS_PATH=$IDF_TOOLS_PATH" >> "$GITHUB_ENV"
+
+      - name: Verify the pinned revision
+        shell: bash
+        run: |
+          actual="$(git -C "$IDF_PATH" rev-parse HEAD)"
+          if [ "$actual" != "$ESP_IDF_REVISION" ]; then
+            echo "expected $ESP_IDF_REVISION, got $actual"
+            exit 1
+          fi
+
+      - name: Build the firmware
+        shell: bash
+        run: |
+          export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
+          python3 submodule/esp-mosaico-utils/mosaico-tools/skills/idf-low-noise-build/scripts/idf_low_noise_build.py \
+            --project . build
+
+      - name: Upload the firmware
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: firmware
+          path: |
+            build/ai_recorder.bin
+            build/partition_table/partition-table.bin
+          if-no-files-found: error
+          retention-days: 14

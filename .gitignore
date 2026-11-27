@@ -1,0 +1,74 @@
+# Build outputs and downloaded dependencies
+build/
+build_*/
+build-*/
+cmake-build-*/
+managed_components/
+# The lock file is versioned: it records the components the build resolved,
+# by content hash, so that the same source gives the same build. The root
+# .gitignore leaves it out for the other projects of the workspace.
+!dependencies.lock
+sdkconfig
+sdkconfig.old
+sdkconfig.backup
+sdkconfig.local.defaults
+compile_commands.json
+CMakeFiles/
+CMakeCache.txt
+.ninja_*
+*.o
+*.obj
+*.elf
+*.map
+*.irisfw
+*.dSYM/
+
+# Local runtimes and caches
+.venv*/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.codex-runs/
+inbox-data/
+*.log
+*.tmp
+
+# Local credentials (example configuration remains versioned)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+# Public upload trust anchor. Not a credential.
+!certs/globalsign-root-ca.pem
+
+# Host-test binaries built under host_tests/ (no extension)
+components/*/host_tests/gen/
+components/*/host_tests/test_*
+!components/*/host_tests/test_*.c
+!components/*/host_tests/test_*.py
+!components/*/host_tests/Makefile
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Keep sdkconfig*.defaults, idf_component.yml and source assets versioned.
+
+# The runtime directory of this repository.
+/.mosaico-runs/
+
+# The release packages that tools/build_release.sh writes. The README in
+# that directory stays, because it tells a user what the packages are.
+/dist/*.bin
+/dist/*.irisfw
+/dist/*.zip
+/dist/*.xz
