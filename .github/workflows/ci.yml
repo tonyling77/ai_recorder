@@ -14,7 +14,7 @@ env:
   ESP_IDF_REVISION: 7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe
 
 concurrency:
-  group: ci-${github.workflow}-${github.event.pull_request.number || github.ref}
+  group: ci-${{github.workflow}}-${{github.event.pull_request.number || github.ref}}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: espressif/esp-idf
-          ref: ${env.ESP_IDF_REVISION}
+          ref: ${{env.ESP_IDF_REVISION}}
           path: .idf/esp-idf
           submodules: recursive
           persist-credentials: false
