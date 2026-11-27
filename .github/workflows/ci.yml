@@ -80,126 +80,147 @@ jobs:
       # app_hello: every binary is a step of its own, so a failure names the binary
       - name: "app_hello / test_provision_screen"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_provision_screen
           ./test_provision_screen
       - name: "app_hello / test_wifi_picker"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_wifi_picker
           ./test_wifi_picker
       - name: "app_hello / test_wifi_sheet"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_wifi_sheet
           ./test_wifi_sheet
       - name: "app_hello / test_wifi_link"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_wifi_link
           ./test_wifi_link
       - name: "app_hello / test_wifi_key_place"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_wifi_key_place
           ./test_wifi_key_place
       - name: "app_hello / test_meeting_notes"
         working-directory: components/app_hello/host_tests
-        # Fails on the Linux runner; the buffer has 280 bytes of slack at
-        # the largest document, so this is the test and not the code.
-        continue-on-error: true
+        if: always()
         run: |
           make test_meeting_notes
           ./test_meeting_notes
       - name: "app_hello / test_uplink_channel"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_uplink_channel
           ./test_uplink_channel
       - name: "app_hello / test_xiaozhi_notes"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_xiaozhi_notes
           ./test_xiaozhi_notes
       - name: "app_hello / test_xiaozhi_ws"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_xiaozhi_ws
           ./test_xiaozhi_ws
       - name: "app_hello / test_wifi_scan_plan"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_wifi_scan_plan
           ./test_wifi_scan_plan
       - name: "app_hello / test_provision_qr"
         working-directory: components/app_hello/host_tests
+        if: always()
         run: |
           make test_provision_qr
           ./test_provision_qr
       # app_onboard: every binary is a step of its own, so a failure names the binary
       - name: "app_onboard / test_wifi_gesture"
         working-directory: components/app_onboard/host_tests
+        if: always()
         run: |
           make test_wifi_gesture
           ./test_wifi_gesture
       - name: "app_onboard / test_ai_key_wifi"
         working-directory: components/app_onboard/host_tests
+        if: always()
         run: |
           make test_ai_key_wifi
           ./test_ai_key_wifi
       # app_recorder: every binary is a step of its own, so a failure names the binary
       - name: "app_recorder / test_recorder_session"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_session
           ./test_recorder_session
       - name: "app_recorder / test_recorder_capture"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_capture
           ./test_recorder_capture
       - name: "app_recorder / test_recorder_encoder"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_encoder
           ./test_recorder_encoder
       - name: "app_recorder / test_recorder_frames"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_frames
           ./test_recorder_frames
       - name: "app_recorder / test_recorder_store"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_store
           ./test_recorder_store
       - name: "app_recorder / test_recorder_library"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_library
           ./test_recorder_library
       - name: "app_recorder / test_recorder_take"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_take
           ./test_recorder_take
       - name: "app_recorder / test_recorder_upload"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_upload
           ./test_recorder_upload
       - name: "app_recorder / test_recorder_upload_lan"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_upload_lan
           ./test_recorder_upload_lan
       - name: "app_recorder / test_recorder_control"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_control
           ./test_recorder_control
       - name: "app_recorder / test_recorder_async"
         working-directory: components/app_recorder/host_tests
+        if: always()
         run: |
           make test_recorder_async
           ./test_recorder_async
