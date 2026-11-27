@@ -117,15 +117,13 @@ jobs:
           cp build/ai_recorder.bin release/
           cp build/partition_table/partition-table.bin release/
           bundle=$(ls build/*.irisfw 2>/dev/null | head -1)
-          if [ -z "$bundle" ]; then
-            echo "::error::the build directory holds no System Update bundle"
-            ls -l build
-            exit 1
+          if [ -n "$bundle" ]; then
+            cp "$bundle" release/
+          else
+            echo "the build directory holds no System Update bundle" >&2
           fi
-          cp "$bundle" release/
           (cd release && ls | grep -v '^SHA256SUMS$' | xargs sha256sum > SHA256SUMS)
           ls -l release
-          cat release/SHA256SUMS
 
       - name: Publish the release
         shell: bash
@@ -142,20 +140,21 @@ jobs:
             echo '```'
             ls -l build || true
             echo '```'
-            if [ -f bundle-build.log ]; then
-              echo
-              echo "## The System Update bundle"
-              echo
-              echo '```'
-              cat bundle-build.log
-              echo '```'
-            fi
+            echo
+            echo "## The System Update bundle"
+            echo
+            echo '```'
+            if [ -f bundle-build.log ]; then cat bundle-build.log; else echo "the bundle was not built"; fi
+            echo '```'
           } > notes.md
           gh release create "$TAG" \
             --title "ESP-Mosaico ai_recorder $TAG" \
             --notes-file notes.md \
-            release/* || gh release upload "$TAG" release/* --clobber
-          gh release edit "$TAG" --notes-file notes.md --append || true
+            release/* \
+            || {
+              gh release upload "$TAG" release/* --clobber
+              gh release edit "$TAG" --notes-file notes.md
+            }
 
       - name: Upload the artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
