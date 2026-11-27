@@ -1,5 +1,8 @@
 # ESP-Mosaico ai_recorder
 
+[![CI](https://github.com/tonyling77/ai_recorder/actions/workflows/ci.yml/badge.svg)](https://github.com/tonyling77/ai_recorder/actions/workflows/ci.yml)
+[![Build](https://github.com/tonyling77/ai_recorder/actions/workflows/build.yml/badge.svg)](https://github.com/tonyling77/ai_recorder/actions/workflows/build.yml)
+
 ESP-Mosaico 的会议录音机。它录下一场会议，把音频送到云上服务或你自己机器上的
 收件箱，然后把纪要显示在板子上。
 
@@ -10,15 +13,19 @@ ESP-Mosaico 的会议录音机。它录下一场会议，把音频送到云上�
 
 - Python 3.10 或更新
 - Git 2.28 或更新
+- 一个 C 编译器（gcc 或 clang），跑主机测试要用
 - ESP-IDF `7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe`，目标 `esp32s31`。
-  没有的话，`bootstrap.sh` 会替你克隆。
+  没有的话 `bootstrap.sh` 会替你克隆，工具链也一起装上。
 - 一块 ESP-Mosaico 开发板
+- 能访问 `github.com` 和 `components.espressif.com`。构建要从组件注册表拉
+  五十来个组件。
+- 大约 4 GB 空闲磁盘：ESP-IDF、工具链和构建产物。
 
 ## 取代码并编译
 
 ```sh
-git clone --recurse-submodules https://github.com/esp-mosaico/esp-ai-recorder.git
-cd esp-ai-recorder
+git clone --recurse-submodules https://github.com/tonyling77/ai_recorder.git
+cd ai_recorder
 ./bootstrap.sh
 ```
 
@@ -43,6 +50,10 @@ python mosaico.py iris app-update --project .        # 只改代码
 
 `system-update` 用于新应用，或者分区表、界面资源有变化。`app-update` 只用于
 代码变化，分区表和资源不变。
+
+**空白板子要先 `recover`。** 如果它要求手动进入，就按住 Boot 键（USB-C 口左边
+那个）上电，等芯片进了 ROM Download Mode 之后松开。
+[设备模式](docs/device-modes_CN.md) 说明两个键分别是什么、什么时候需要哪个模式。
 
 看看板子现在是什么状态：
 
@@ -138,7 +149,7 @@ rm -rf build   # 然后再编一次
 - `components/app_hello/ui/main.json`：手写的场景；生成的绑定和 bundle 留在构建里。
 - `tools/inbox`：收件箱和它对话的模型服务。
 - `tools/quality`：格式规则和工程约定。
-- `docs/`：收件箱地址和小智智能体的设计说明。
+- `docs/`：设备模式与怎么进入、收件箱地址的设计说明、小智智能体的设计说明。
 
 依赖方向是 `main -> app_hello -> ESP-GSP` 和
 `main -> app_display -> BSP/ESP-GSP`。两个应用组件都不依赖 `main`，也不依赖彼此。

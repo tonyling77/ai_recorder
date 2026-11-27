@@ -1,5 +1,8 @@
 # ESP-Mosaico ai_recorder
 
+[![CI](https://github.com/tonyling77/ai_recorder/actions/workflows/ci.yml/badge.svg)](https://github.com/tonyling77/ai_recorder/actions/workflows/ci.yml)
+[![Build](https://github.com/tonyling77/ai_recorder/actions/workflows/build.yml/badge.svg)](https://github.com/tonyling77/ai_recorder/actions/workflows/build.yml)
+
 A meeting recorder for ESP-Mosaico. It records a meeting, sends the audio to
 a cloud service or to an inbox on your own machine, and shows the minutes on
 the board.
@@ -12,15 +15,20 @@ the device.
 
 - Python 3.10 or newer
 - Git 2.28 or newer
+- A C compiler (gcc or clang), for the host tests
 - ESP-IDF `7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe` for the `esp32s31` target.
-  `bootstrap.sh` clones it for you if you do not have it.
+  `bootstrap.sh` clones it for you if you do not have it, and the toolchain
+  it needs comes with it.
 - An ESP-Mosaico board
+- Network access to `github.com` and `components.espressif.com`. The build
+  fetches about fifty components from the Component Registry.
+- About 4 GB of free disk: the ESP-IDF checkout, its toolchain and the build.
 
 ## Get the code and build it
 
 ```sh
-git clone --recurse-submodules https://github.com/esp-mosaico/esp-ai-recorder.git
-cd esp-ai-recorder
+git clone --recurse-submodules https://github.com/tonyling77/ai_recorder.git
+cd ai_recorder
 ./bootstrap.sh
 ```
 
@@ -47,6 +55,12 @@ python mosaico.py iris app-update --project .        # a change of code only
 `system-update` is for a new application, or for a change of the partition
 table or of the interface resources. `app-update` is for a change of code
 alone, with the same partition table and the same resources.
+
+**A blank board needs `recover` first.** If it asks for manual entry, hold the
+Boot button (to the left of the USB-C port) while powering the board on, and
+release it once the chip is in ROM Download Mode. The
+[device modes](docs/device-modes.md) say which button is which and when each
+mode is needed.
 
 To see what is there:
 
@@ -157,7 +171,8 @@ rm -rf build   # then build again
   bindings and bundles stay in the build.
 - `tools/inbox`: the inbox and the model services it talks to.
 - `tools/quality`: the format rules and the project policy.
-- `docs/`: the design of the inbox address and of the Xiaozhi agent.
+- `docs/`: the device modes and how to enter them, the design of the inbox
+  address, and the design of the Xiaozhi agent.
 
 The dependency direction is `main -> app_hello -> ESP-GSP` and
 `main -> app_display -> BSP/ESP-GSP`. Neither application component depends
