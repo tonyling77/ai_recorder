@@ -14,7 +14,7 @@ env:
   ESP_IDF_REVISION: 7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${github.workflow}-${github.event.pull_request.number || github.ref}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: espressif/esp-idf
-          ref: ${{ env.ESP_IDF_REVISION }}
+          ref: ${env.ESP_IDF_REVISION}
           path: .idf/esp-idf
           submodules: recursive
           persist-credentials: false
@@ -52,9 +52,8 @@ jobs:
           echo "IDF_PATH=$IDF_PATH" >> "$GITHUB_ENV"
           echo "IDF_TOOLS_PATH=$IDF_TOOLS_PATH" >> "$GITHUB_ENV"
 
-      # The host tests write into a temporary directory and the interface
-      # suite compiles a component of the Registry, so the managed components
-      # have to be there before the tests run. Resolving them is a
+      # The host tests compile a component of the Registry, so the managed
+      # components have to be there before the tests run. Resolving them is a
       # configure, not a build. The versions are the ones the manifest pins.
       - name: Resolve the managed components
         shell: bash
@@ -78,21 +77,78 @@ jobs:
         working-directory: components/app_recorder/host_tests
         run: python -m unittest discover -v
 
-      # Each suite is reported on its own, so a failure names the suite that
-      # failed instead of only the exit code of the last command.
-      - name: Build and run the host tests
-        shell: bash
-        run: |
-          failed=0
-          for dir in components/app_hello/host_tests \
-                     components/app_onboard/host_tests \
-                     components/app_recorder/host_tests; do
-            echo "### $dir" >> "$GITHUB_STEP_SUMMARY"
-            if make -C "$dir" test >> "$GITHUB_STEP_SUMMARY" 2>&1; then
-              echo "**$dir passed**" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "**$dir FAILED**" >> "$GITHUB_STEP_SUMMARY"
-              failed=1
-            fi
-          done
-          exit $failed
+      # app_hello: every binary is a step of its own, so a failure names the binary
+      - name: "app_hello / test_provision_screen"
+        working-directory: components/app_hello/host_tests
+        run: make test_provision_screen
+      - name: "app_hello / test_wifi_picker"
+        working-directory: components/app_hello/host_tests
+        run: make test_wifi_picker
+      - name: "app_hello / test_wifi_sheet"
+        working-directory: components/app_hello/host_tests
+        run: make test_wifi_sheet
+      - name: "app_hello / test_wifi_link"
+        working-directory: components/app_hello/host_tests
+        run: make test_wifi_link
+      - name: "app_hello / test_wifi_key_place"
+        working-directory: components/app_hello/host_tests
+        run: make test_wifi_key_place
+      - name: "app_hello / test_meeting_notes"
+        working-directory: components/app_hello/host_tests
+        run: make test_meeting_notes
+      - name: "app_hello / test_uplink_channel"
+        working-directory: components/app_hello/host_tests
+        run: make test_uplink_channel
+      - name: "app_hello / test_xiaozhi_notes"
+        working-directory: components/app_hello/host_tests
+        run: make test_xiaozhi_notes
+      - name: "app_hello / test_xiaozhi_ws"
+        working-directory: components/app_hello/host_tests
+        run: make test_xiaozhi_ws
+      - name: "app_hello / test_wifi_scan_plan"
+        working-directory: components/app_hello/host_tests
+        run: make test_wifi_scan_plan
+      - name: "app_hello / test_provision_qr"
+        working-directory: components/app_hello/host_tests
+        run: make test_provision_qr
+      # app_onboard: every binary is a step of its own, so a failure names the binary
+      - name: "app_onboard / test_wifi_gesture"
+        working-directory: components/app_onboard/host_tests
+        run: make test_wifi_gesture
+      - name: "app_onboard / test_ai_key_wifi"
+        working-directory: components/app_onboard/host_tests
+        run: make test_ai_key_wifi
+      # app_recorder: every binary is a step of its own, so a failure names the binary
+      - name: "app_recorder / test_recorder_session"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_session
+      - name: "app_recorder / test_recorder_capture"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_capture
+      - name: "app_recorder / test_recorder_encoder"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_encoder
+      - name: "app_recorder / test_recorder_frames"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_frames
+      - name: "app_recorder / test_recorder_store"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_store
+      - name: "app_recorder / test_recorder_library"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_library
+      - name: "app_recorder / test_recorder_take"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_take
+      - name: "app_recorder / test_recorder_upload"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_upload
+      - name: "app_recorder / test_recorder_upload_lan"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_upload_lan
+      - name: "app_recorder / test_recorder_control"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_control
+      - name: "app_recorder / test_recorder_async"
+        working-directory: components/app_recorder/host_tests
+        run: make test_recorder_async
