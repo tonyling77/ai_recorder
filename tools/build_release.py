@@ -28,7 +28,7 @@ import zipfile
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
-WORKSPACE = PROJECT.parent
+# This repository is the workspace: the submodules live in it.
 BUILD = PROJECT / "build"
 DIST = PROJECT / "dist"
 BUNDLE = BUILD / "ai_recorder-system-update.irisfw"
@@ -155,7 +155,7 @@ def ideas_package() -> int:
               "the software page is not built here")
         return 0
     command = [sys.executable, str(publish), "package"]
-    result = subprocess.run(command, cwd=WORKSPACE)
+    result = subprocess.run(command, cwd=PROJECT)
     if result.returncode != 0:
         print("the Ideas package was not built", file=sys.stderr)
         return result.returncode
@@ -339,7 +339,7 @@ INBOX_FILES = ("inbox.py", "agent_route.py", "model_api.py", "asr.py", "writers.
 # The bootloader and the Recovery are the reviewed ones of the product. The
 # application is proven on the board with that bootloader, and a system
 # update does not replace it.
-PREBUILT = (PROJECT.parent / "submodule" / "esp-mosaico-utils" /
+PREBUILT = (PROJECT / "submodule" / "esp-mosaico-utils" /
             "esp-mosaico-vibe-mode" / "firmware" / "vibe-mode" / "prebuilt" / "recovery")
 
 FACTORY_PARTS = (
@@ -369,7 +369,7 @@ def factory_image() -> Path:
     """The one file that flashes a board completely, and its own check."""
     import json
 
-    sys.path.insert(0, str(WORKSPACE / "submodule" / "esp-mosaico-utils" / "mosaico-tools" / "tools"))
+    sys.path.insert(0, str(PROJECT / "submodule" / "esp-mosaico-utils" / "mosaico-tools" / "tools"))
     from mosaico_cli.host import prepare_idf_environment
 
     prepared = prepare_idf_environment(idf_path())

@@ -72,3 +72,6 @@ Thumbs.db
 /dist/*.irisfw
 /dist/*.zip
 /dist/*.xz
+
+# The directory the release workflow collects the artifacts in.
+/release/

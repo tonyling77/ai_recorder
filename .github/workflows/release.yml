@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to release'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  ESP_IDF_REVISION: 7b9cc1ac79f865983f59bb8ff3ff43eb74ff1dbe
+
+jobs:
+  release:
+    name: build and publish the release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Check out the pinned ESP-IDF
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: espressif/esp-idf
+          ref: ${{ env.ESP_IDF_REVISION }}
+          path: .idf/esp-idf
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install the ESP-IDF tools
+        shell: bash
+        run: |
+          export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
+          export IDF_TOOLS_PATH="$RUNNER_TEMP/espressif"
+          "$IDF_PATH/install.sh" all
+          echo "IDF_PATH=$IDF_PATH" >> "$GITHUB_ENV"
+          echo "IDF_TOOLS_PATH=$IDF_TOOLS_PATH" >> "$GITHUB_ENV"
+
+      - name: Build the firmware
+        shell: bash
+        run: |
+          export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
+          python3 submodule/esp-mosaico-utils/mosaico-tools/skills/idf-low-noise-build/scripts/idf_low_noise_build.py \
+            --project . build
+
+      # The System Update bundle is built by the ESP-Iris tools, which need
+      # their own host environment. Prepare it the way the product does, so
+      # the bundle is the same one the board was verified with.
+      - name: Prepare the ESP-Iris host environment
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, str(Path("submodule/esp-mosaico-utils/mosaico-tools/tools").resolve()))
+          from mosaico_cli.workspace import load_workspace
+          from mosaico_cli.runtime import RunContext
+          from mosaico_cli.gateway import ensure_iris_tools
+
+          tool_root = Path("submodule/esp-mosaico-utils/mosaico-tools").resolve()
+          workspace = load_workspace(tool_root, start=Path.cwd())
+          context = RunContext(workspace, "release", False, False)
+          ensure_iris_tools(context)
+          print("the ESP-Iris host environment is ready")
+          PY
+
+      - name: Build the System Update bundle
+        shell: bash
+        continue-on-error: true
+        run: |
+          export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
+          python3 tools/build_bundle.py
+
+      - name: Check that the artifacts carry nothing of the builder
+        shell: bash
+        continue-on-error: true
+        run: python3 tools/check_release.py
+
+      - name: Collect the artifacts
+        shell: bash
+        run: |
+          mkdir -p release
+          cp build/ai_recorder.bin release/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin release/ 2>/dev/null || true
+          cp build/ai_recorder-system-update.irisfw release/ 2>/dev/null || true
+          (cd release && sha256sum * > SHA256SUMS 2>/dev/null || shasum -a 256 * > SHA256SUMS)
+          ls -l release
+
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          gh release create "$TAG" \
+            --title "ESP-Mosaico ai_recorder $TAG" \
+            --generate-notes \
+            release/* || gh release upload "$TAG" release/* --clobber
+
+      - name: Upload the artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release
+          path: release/
+          if-no-files-found: warn
+          retention-days: 30

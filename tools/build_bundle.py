@@ -25,9 +25,10 @@ import sys
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
-WORKSPACE = PROJECT.parent
-UTILS = WORKSPACE / "submodule" / "esp-mosaico-utils"
-PINNED_IDF = Path(os.environ.get("IDF_PATH", WORKSPACE / ".idf" / "esp-idf")).expanduser()
+# This repository is the workspace: the submodules and the local
+# ESP-IDF live in it, not in a directory above it.
+UTILS = PROJECT / "submodule" / "esp-mosaico-utils"
+PINNED_IDF = Path(os.environ.get("IDF_PATH", PROJECT / ".idf" / "esp-idf")).expanduser()
 
 
 def iris_python() -> Path | None:
@@ -38,6 +39,24 @@ def iris_python() -> Path | None:
 
     python = virtual_environment_python(iris_environment_root(UTILS / "ESP-Iris"))
     return python if python.is_file() else None
+
+
+def project_name() -> str:
+    """The name the IDF project has.
+
+    The bundle is named after the project, not after the directory the
+    repository happens to sit in: a repository called `esp-ai-recorder` that
+    builds the project `ai_recorder` still produces
+    `ai_recorder-system-update.irisfw`.
+    """
+    import re
+
+    text = (PROJECT / "CMakeLists.txt").read_text(encoding="utf-8")
+    match = re.search(r"^project\(\s*([A-Za-z0-9_]+)", text, re.M)
+    if not match:
+        print("the project name is not in CMakeLists.txt", file=sys.stderr)
+        raise SystemExit(2)
+    return match.group(1)
 
 
 def main() -> int:
@@ -64,12 +83,12 @@ def main() -> int:
         "system-update-bundle",
     ]
     print("bundle:", " ".join(command))
-    result = subprocess.run(command, cwd=WORKSPACE, env=environment)
+    result = subprocess.run(command, cwd=PROJECT, env=environment)
     if result.returncode != 0:
         print("the bundle was not built", file=sys.stderr)
         return result.returncode
 
-    bundle = PROJECT / "build" / f"{PROJECT.name}-system-update.irisfw"
+    bundle = PROJECT / "build" / f"{project_name()}-system-update.irisfw"
     if not bundle.is_file():
         print(f"the bundle {bundle} was not produced", file=sys.stderr)
         return 2
