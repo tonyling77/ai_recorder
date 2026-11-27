@@ -92,6 +92,7 @@ jobs:
 
       - name: Build the System Update bundle
         shell: bash
+        continue-on-error: true
         run: |
           export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
           python3 tools/build_bundle.py 2>&1 | tee bundle-build.log

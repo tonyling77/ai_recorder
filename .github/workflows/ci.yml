@@ -34,14 +34,27 @@ jobs:
         with:
           python-version: "3.10"
 
+      # The ESP-IDF checkout is the biggest download of the job, and the
+      # network to github.com drops it now and then. It is done by hand here
+      # so that a failure can be tried again.
       - name: Check out the pinned ESP-IDF
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          repository: espressif/esp-idf
-          ref: ${env.ESP_IDF_REVISION}
-          path: .idf/esp-idf
-          submodules: recursive
-          persist-credentials: false
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            rm -rf .idf/esp-idf
+            if git clone --filter=blob:none --no-checkout \
+                 https://github.com/espressif/esp-idf.git .idf/esp-idf &&
+               git -C .idf/esp-idf fetch --filter=blob:none origin "$ESP_IDF_REVISION" &&
+               git -C .idf/esp-idf checkout "$ESP_IDF_REVISION" &&
+               git -C .idf/esp-idf submodule update --init --recursive --depth 1; then
+              echo "the ESP-IDF checkout is at $ESP_IDF_REVISION"
+              exit 0
+            fi
+            echo "::warning::the ESP-IDF checkout failed, attempt $attempt of 3"
+            sleep 20
+          done
+          echo "::error::the ESP-IDF checkout failed three times"
+          exit 1
 
       - name: Install the ESP-IDF tools
         shell: bash
