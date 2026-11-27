@@ -34,27 +34,14 @@ jobs:
         with:
           python-version: "3.10"
 
-      # The ESP-IDF checkout is the biggest download of the job, and the
-      # network to github.com drops it now and then. It is done by hand here
-      # so that a failure can be tried again.
       - name: Check out the pinned ESP-IDF
-        shell: bash
-        run: |
-          for attempt in 1 2 3; do
-            rm -rf .idf/esp-idf
-            if git clone --filter=blob:none --no-checkout \
-                 https://github.com/espressif/esp-idf.git .idf/esp-idf &&
-               git -C .idf/esp-idf fetch --filter=blob:none origin "$ESP_IDF_REVISION" &&
-               git -C .idf/esp-idf checkout "$ESP_IDF_REVISION" &&
-               git -C .idf/esp-idf submodule update --init --recursive --depth 1; then
-              echo "the ESP-IDF checkout is at $ESP_IDF_REVISION"
-              exit 0
-            fi
-            echo "::warning::the ESP-IDF checkout failed, attempt $attempt of 3"
-            sleep 20
-          done
-          echo "::error::the ESP-IDF checkout failed three times"
-          exit 1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: espressif/esp-idf
+          ref: ${env.ESP_IDF_REVISION}
+          path: .idf/esp-idf
+          submodules: recursive
+          persist-credentials: false
 
       - name: Install the ESP-IDF tools
         shell: bash
@@ -93,75 +80,123 @@ jobs:
       # app_hello: every binary is a step of its own, so a failure names the binary
       - name: "app_hello / test_provision_screen"
         working-directory: components/app_hello/host_tests
-        run: make test_provision_screen
+        run: |
+          make test_provision_screen
+          ./test_provision_screen
       - name: "app_hello / test_wifi_picker"
         working-directory: components/app_hello/host_tests
-        run: make test_wifi_picker
+        run: |
+          make test_wifi_picker
+          ./test_wifi_picker
       - name: "app_hello / test_wifi_sheet"
         working-directory: components/app_hello/host_tests
-        run: make test_wifi_sheet
+        run: |
+          make test_wifi_sheet
+          ./test_wifi_sheet
       - name: "app_hello / test_wifi_link"
         working-directory: components/app_hello/host_tests
-        run: make test_wifi_link
+        run: |
+          make test_wifi_link
+          ./test_wifi_link
       - name: "app_hello / test_wifi_key_place"
         working-directory: components/app_hello/host_tests
-        run: make test_wifi_key_place
+        run: |
+          make test_wifi_key_place
+          ./test_wifi_key_place
       - name: "app_hello / test_meeting_notes"
         working-directory: components/app_hello/host_tests
-        run: make test_meeting_notes
+        run: |
+          make test_meeting_notes
+          ./test_meeting_notes
       - name: "app_hello / test_uplink_channel"
         working-directory: components/app_hello/host_tests
-        run: make test_uplink_channel
+        run: |
+          make test_uplink_channel
+          ./test_uplink_channel
       - name: "app_hello / test_xiaozhi_notes"
         working-directory: components/app_hello/host_tests
-        run: make test_xiaozhi_notes
+        run: |
+          make test_xiaozhi_notes
+          ./test_xiaozhi_notes
       - name: "app_hello / test_xiaozhi_ws"
         working-directory: components/app_hello/host_tests
-        run: make test_xiaozhi_ws
+        run: |
+          make test_xiaozhi_ws
+          ./test_xiaozhi_ws
       - name: "app_hello / test_wifi_scan_plan"
         working-directory: components/app_hello/host_tests
-        run: make test_wifi_scan_plan
+        run: |
+          make test_wifi_scan_plan
+          ./test_wifi_scan_plan
       - name: "app_hello / test_provision_qr"
         working-directory: components/app_hello/host_tests
-        run: make test_provision_qr
+        run: |
+          make test_provision_qr
+          ./test_provision_qr
       # app_onboard: every binary is a step of its own, so a failure names the binary
       - name: "app_onboard / test_wifi_gesture"
         working-directory: components/app_onboard/host_tests
-        run: make test_wifi_gesture
+        run: |
+          make test_wifi_gesture
+          ./test_wifi_gesture
       - name: "app_onboard / test_ai_key_wifi"
         working-directory: components/app_onboard/host_tests
-        run: make test_ai_key_wifi
+        run: |
+          make test_ai_key_wifi
+          ./test_ai_key_wifi
       # app_recorder: every binary is a step of its own, so a failure names the binary
       - name: "app_recorder / test_recorder_session"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_session
+        run: |
+          make test_recorder_session
+          ./test_recorder_session
       - name: "app_recorder / test_recorder_capture"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_capture
+        run: |
+          make test_recorder_capture
+          ./test_recorder_capture
       - name: "app_recorder / test_recorder_encoder"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_encoder
+        run: |
+          make test_recorder_encoder
+          ./test_recorder_encoder
       - name: "app_recorder / test_recorder_frames"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_frames
+        run: |
+          make test_recorder_frames
+          ./test_recorder_frames
       - name: "app_recorder / test_recorder_store"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_store
+        run: |
+          make test_recorder_store
+          ./test_recorder_store
       - name: "app_recorder / test_recorder_library"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_library
+        run: |
+          make test_recorder_library
+          ./test_recorder_library
       - name: "app_recorder / test_recorder_take"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_take
+        run: |
+          make test_recorder_take
+          ./test_recorder_take
       - name: "app_recorder / test_recorder_upload"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_upload
+        run: |
+          make test_recorder_upload
+          ./test_recorder_upload
       - name: "app_recorder / test_recorder_upload_lan"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_upload_lan
+        run: |
+          make test_recorder_upload_lan
+          ./test_recorder_upload_lan
       - name: "app_recorder / test_recorder_control"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_control
+        run: |
+          make test_recorder_control
+          ./test_recorder_control
       - name: "app_recorder / test_recorder_async"
         working-directory: components/app_recorder/host_tests
-        run: make test_recorder_async
+        run: |
+          make test_recorder_async
+          ./test_recorder_async
