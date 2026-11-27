@@ -216,6 +216,7 @@ static void the_notes_fit_in_the_buffer(void)
      * has to hold the notes that were in. */
     meeting_notes_t notes;
     char path[] = "/tmp/ai-recorder-notes-full-XXXXXX";
+    char file[256];
     char issued[20];
     char title[72];
     char conclusions[180];
@@ -234,6 +235,7 @@ static void the_notes_fit_in_the_buffer(void)
         todos[i] = todo;
     }
     expect(mkdtemp(path) != NULL, "temp directory");
+    expect(snprintf(file, sizeof(file), "%s/notes-full.txt", path) > 0, "the file name");
     meeting_notes_init(&notes);
     for (int i = 0; i < MEETING_NOTES_CAP; i++) {
         char one_id[24];
@@ -243,13 +245,13 @@ static void the_notes_fit_in_the_buffer(void)
     }
     expect(meeting_notes_count(&notes) == MEETING_NOTES_CAP, "every note is stored");
     expect(meeting_notes_write(&notes, document, sizeof(document)) == 0, "the full document is written");
-    expect(meeting_notes_save(&notes, "/tmp/ai-recorder-notes-full.txt") == 0, "the full minutes are saved");
+    expect(meeting_notes_save(&notes, file) == 0, "the full minutes are saved");
     {
         meeting_notes_t loaded;
-        expect(meeting_notes_load(&loaded, "/tmp/ai-recorder-notes-full.txt") == 0, "the full minutes are loaded");
+        expect(meeting_notes_load(&loaded, file) == 0, "the full minutes are loaded");
         expect(meeting_notes_count(&loaded) == MEETING_NOTES_CAP, "the loaded minutes hold every note");
     }
-    remove("/tmp/ai-recorder-notes-full.txt");
+    remove(file);
     rmdir(path);
 }
 
