@@ -115,16 +115,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p release
-          cp build/ai_recorder.bin release/
-          cp build/partition_table/partition-table.bin release/
+          cp build/ai_recorder.bin release/ || echo "could not copy the image"
+          cp build/partition_table/partition-table.bin release/ || echo "could not copy the partition table"
           bundle=$(ls build/*.irisfw 2>/dev/null | head -1)
           if [ -n "$bundle" ]; then
-            cp "$bundle" release/
+            cp "$bundle" release/ || echo "could not copy the bundle"
           else
-            echo "the build directory holds no System Update bundle" >&2
+            echo "the build directory holds no System Update bundle"
           fi
           (cd release && ls | grep -v '^SHA256SUMS$' | xargs sha256sum > SHA256SUMS)
           ls -l release
+          cat release/SHA256SUMS
 
       - name: Publish the release
         shell: bash
