@@ -92,10 +92,10 @@ jobs:
 
       - name: Build the System Update bundle
         shell: bash
-        continue-on-error: true
         run: |
           export IDF_PATH="$GITHUB_WORKSPACE/.idf/esp-idf"
-          python3 tools/build_bundle.py
+          python3 tools/build_bundle.py 2>&1 | tee bundle-build.log
+          exit "${PIPESTATUS[0]}"
 
       - name: Check that the bundle carries nothing of the builder
         shell: bash
@@ -133,10 +133,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
+          # The release notes carry what the build produced and, when the
+          # bundle could not be built, why. The notes are the one place that
+          # is readable without the run's log.
+          {
+            echo "## What the build produced"
+            echo
+            echo '```'
+            ls -l build || true
+            echo '```'
+            if [ -f bundle-build.log ]; then
+              echo
+              echo "## The System Update bundle"
+              echo
+              echo '```'
+              cat bundle-build.log
+              echo '```'
+            fi
+          } > notes.md
           gh release create "$TAG" \
             --title "ESP-Mosaico ai_recorder $TAG" \
-            --generate-notes \
+            --notes-file notes.md \
             release/* || gh release upload "$TAG" release/* --clobber
+          gh release edit "$TAG" --notes-file notes.md --append || true
 
       - name: Upload the artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
