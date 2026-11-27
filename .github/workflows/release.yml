@@ -113,6 +113,7 @@ jobs:
 
       - name: Collect the artifacts
         shell: bash
+        continue-on-error: true
         run: |
           mkdir -p release
           cp build/ai_recorder.bin release/ || echo "could not copy the image"
@@ -123,9 +124,9 @@ jobs:
           else
             echo "the build directory holds no System Update bundle"
           fi
-          (cd release && ls | grep -v '^SHA256SUMS$' | xargs sha256sum > SHA256SUMS)
+          (cd release && ls | grep -v '^SHA256SUMS$' | xargs -r sha256sum > SHA256SUMS) || true
           ls -l release
-          cat release/SHA256SUMS
+          cat release/SHA256SUMS || true
 
       - name: Publish the release
         shell: bash
@@ -141,6 +142,12 @@ jobs:
             echo
             echo '```'
             ls -l build || true
+            echo '```'
+            echo
+            echo "## What the release carries"
+            echo
+            echo '```'
+            ls -l release || true
             echo '```'
             echo
             echo "## The System Update bundle"
