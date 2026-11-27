@@ -51,6 +51,18 @@ jobs:
           echo "IDF_PATH=$IDF_PATH" >> "$GITHUB_ENV"
           echo "IDF_TOOLS_PATH=$IDF_TOOLS_PATH" >> "$GITHUB_ENV"
 
+      # The System Update bundle is built by the ESP-Iris tools, and the target
+      # that builds it reads ESP_IRIS_PYTHON when CMake configures. The
+      # environment therefore has to be ready and named before the build.
+      - name: Prepare the ESP-Iris host environment
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check jsonschema markdown-it-py \
+            fonttools freetype-py libraqm 2>/dev/null || true
+          python3 tools/prepare_iris_env.py > iris-python.txt
+          echo "ESP_IRIS_PYTHON=$(cat iris-python.txt)" >> "$GITHUB_ENV"
+          cat iris-python.txt
+
       - name: Build the firmware
         shell: bash
         run: |
@@ -58,37 +70,14 @@ jobs:
           python3 submodule/esp-mosaico-utils/mosaico-tools/skills/idf-low-noise-build/scripts/idf_low_noise_build.py \
             --project . build
 
-      # The System Update bundle carries the interface of the application,
-      # and the interface is built by the GSP compiler. The compiler is
-      # pinned and prepared apart from the build, the way the product CI
-      # prepares it.
+      # The interface of the application is built by the GSP compiler. The
+      # compiler is pinned and prepared apart from the build, the way the
+      # product CI prepares it.
       - name: Prepare the pinned GSP compiler
         shell: bash
         run: |
           python -m pip install --disable-pip-version-check esp-gsp-tools==0.1.1
           python submodule/esp-mosaico-utils/tools/ci/prepare_gsp.py --compiler-only
-
-      # The System Update bundle is built by the ESP-Iris tools, which need
-      # their own host environment. Prepare it the way the product does, so
-      # the bundle is the same one the board was verified with.
-      - name: Prepare the ESP-Iris host environment
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import sys
-          from pathlib import Path
-
-          sys.path.insert(0, str(Path("submodule/esp-mosaico-utils/mosaico-tools/tools").resolve()))
-          from mosaico_cli.workspace import load_workspace
-          from mosaico_cli.runtime import RunContext
-          from mosaico_cli.gateway import ensure_iris_tools
-
-          tool_root = Path("submodule/esp-mosaico-utils/mosaico-tools").resolve()
-          workspace = load_workspace(tool_root, start=Path.cwd())
-          context = RunContext(workspace, "release", False, False)
-          ensure_iris_tools(context)
-          print("the ESP-Iris host environment is ready")
-          PY
 
       - name: Build the System Update bundle
         shell: bash

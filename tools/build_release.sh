@@ -24,6 +24,13 @@ unset UPLOAD_TOKEN
 
 touch components/app_recorder/CMakeLists.txt
 
+# The System Update bundle is built by the ESP-Iris tools, and the target that
+# builds it reads ESP_IRIS_PYTHON when CMake configures. The environment has
+# to be ready and named before the build starts, or the target refuses to
+# build and says that the host environment is unavailable.
+ESP_IRIS_PYTHON=$(python3 tools/prepare_iris_env.py)
+export ESP_IRIS_PYTHON
+
 python3 submodule/esp-mosaico-utils/mosaico-tools/skills/idf-low-noise-build/scripts/idf_low_noise_build.py \
     --project . build
 
